@@ -8,6 +8,10 @@ const Room: React.FC =() =>{
     const { id } = useParams();
     const { socket,user, stream, peers } = useContext(SocketContext);
 
+    const fetchparticipants = ({roomId, participants}: {roomId: string, participants: string[]}) => {
+        console.log("fetched room participants");
+        console.log(roomId,participants);
+    }
 
     useEffect(() => {
         // emitting this event so that either creator of room or joiner in the room
@@ -15,9 +19,10 @@ const Room: React.FC =() =>{
         if(user) {
             console.log("New user joined with id", user._id, "has joined room", id);
             socket.emit("joined-room", {roomId:id, peerId: user._id});
+            socket.on('get-users', fetchparticipants);
         }
-        console.log("peers",peers);
-    },[id, user,socket, peers]);
+        console.log("peers");
+    },[id, user,socket]);
 
     return(
         <div>

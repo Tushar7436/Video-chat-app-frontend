@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import {v4 as UUIDv4 } from "uuid";
 import { peerReducer } from "../Reducers/peerReducer";
-import { addPeerAction } from "../Actions/peerActions";
+import { addPeerAction } from "../Actions/peerAction";
 
 const WS_Server = "http://localhost:5500";
 
@@ -59,6 +59,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
 
     useEffect(() => {
         if(!user || !stream) return;
+        
         socket.on("user-joined", ({peerId}) => {
             const call = user.call(peerId, stream);
             console.log("calling a new peer", peerId);
