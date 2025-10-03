@@ -6,12 +6,8 @@ import UserFeedPlayer from "../components/UserFeedPlayer";
 const Room: React.FC =() =>{
 
     const { id } = useParams();
-    const { socket,user, stream } = useContext(SocketContext);
+    const { socket,user, stream, peers } = useContext(SocketContext);
 
-    const fetchparticipants = ({roomId, participants}: {roomId: string, participants: string[]}) => {
-        console.log("fetched room participants");
-        console.log(roomId,participants);
-    }
 
     useEffect(() => {
         // emitting this event so that either creator of room or joiner in the room
@@ -19,14 +15,24 @@ const Room: React.FC =() =>{
         if(user) {
             console.log("New user joined with id", user._id, "has joined room", id);
             socket.emit("joined-room", {roomId:id, peerId: user._id});
-            socket.on('get-users', fetchparticipants);
         }
-    },[id, user]);
+        console.log("peers",peers);
+    },[id, user,socket, peers]);
 
     return(
         <div>
+            Creater feed
+            <br/>
             room: {id}
             <UserFeedPlayer stream ={stream} />
+            <div>
+                Other users feed
+                {Object.keys(peers).map((peerId) => (
+                    <>
+                        <UserFeedPlayer key = {peerId} stream = {peers[peerId].stream}/>
+                    </>
+                ))}
+            </div>
         </div>
         
     )
