@@ -12,7 +12,7 @@ const Room: React.FC =() =>{
         console.log("fetched room participants");
         console.log(roomId,participants);
     }
-
+    console.log("Current peers state:", peers);
     useEffect(() => {
         // emitting this event so that either creator of room or joiner in the room
         // anyone is added the server knows that new person have been added to this room 
@@ -21,7 +21,6 @@ const Room: React.FC =() =>{
             socket.emit("joined-room", {roomId:id, peerId: user._id});
             socket.on('get-users', fetchparticipants);
         }
-        console.log("peers");
     },[id, user,socket]);
 
     return(
@@ -33,9 +32,9 @@ const Room: React.FC =() =>{
             <div>
                 Other users feed
                 {Object.keys(peers).map((peerId) => (
-                    <>
-                        <UserFeedPlayer key = {peerId} stream = {peers[peerId].stream}/>
-                    </>
+                    <div key = {peerId}>
+                        <UserFeedPlayer stream = {peers[peerId].stream}/>
+                    </div>
                 ))}
             </div>
         </div>

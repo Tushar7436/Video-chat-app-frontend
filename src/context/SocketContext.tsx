@@ -42,8 +42,12 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         useEffect(() => {
 
             const userId = UUIDv4();
-            const newPeer = new Peer(userId);
-
+            const newPeer = new Peer(userId, {
+                host: "https://video-chat-app-backend-i2wp.onrender.com",
+                port: 443,
+                path: "/peerjs/myapp",
+                secure: false  // Add this for localhost HTTP
+            });
         setUser(newPeer);
 
         fetchUserFeed();
@@ -63,7 +67,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         socket.on("user-joined", ({peerId}) => {
             const call = user.call(peerId, stream);
             console.log("calling a new peer", peerId);
-            call.on("stream", () => {
+            call.on("stream", (stream) => {
                 dispatch(addPeerAction(peerId, stream));
             })
         })
@@ -72,7 +76,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
             //what to do when other peers on the group call you when u joined
             console.log("receiving a call");
             call.answer(stream);
-            call.on("stream", () => {
+            call.on("stream", (stream) => {
                 dispatch(addPeerAction(call.peer, stream));
             })
         })
