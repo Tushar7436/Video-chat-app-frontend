@@ -46,7 +46,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
                 host: "https://video-chat-app-backend-zmxi.onrender.com",
                 port: 443,
                 path: "/peerjs/myapp",
-                secure: false  // Add this for localhost HTTP
+                secure: true  // Add this for localhost HTTP
             });
         setUser(newPeer);
 
