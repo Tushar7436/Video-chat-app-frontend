@@ -6,7 +6,7 @@ import {v4 as UUIDv4 } from "uuid";
 import { peerReducer } from "../Reducers/peerReducer";
 import { addPeerAction } from "../Actions/peerAction";
 
-const WS_Server = "http://localhost:5500";
+const WS_Server = "https://video-chat-app-backend-zmxi.onrender.com";
 
 export const SocketContext = createContext<any | null>(null); 
 
@@ -43,7 +43,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
 
             const userId = UUIDv4();
             const newPeer = new Peer(userId, {
-                host: "https://video-chat-app-backend-zmxi.onrender.com",
+                host: "video-chat-app-backend-zmxi.onrender.com",
                 port: 443,
                 path: "/peerjs/myapp",
                 secure: true  // Add this for localhost HTTP
