@@ -43,10 +43,10 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
 
             const userId = UUIDv4();
             const newPeer = new Peer(userId, {
-                host: "https://video-chat-app-backend-i2wp.onrender.com",
-                port: 443,
+                host: "localhost",
+                port: 5500,
                 path: "/peerjs/myapp",
-                secure: false  // Add this for localhost HTTP
+                secure: true  // Add this for localhost HTTP
             });
         setUser(newPeer);
 
