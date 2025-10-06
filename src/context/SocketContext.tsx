@@ -2,7 +2,7 @@ import SocketClient from "socket.io-client"
 import { createContext, useEffect, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
-import {v4 as UUIDv4 } from "uuid";
+import { v4 as UUIDv4 } from "uuid";
 import { peerReducer } from "../Reducers/peerReducer";
 import { addPeerAction } from "../Actions/peerAction";
 
@@ -10,81 +10,98 @@ const WS_Server = "https://video-chat-app-backend-zmxi.onrender.com";
 
 export const SocketContext = createContext<any | null>(null); 
 
-const socket = SocketClient(WS_Server,{
+const socket = SocketClient(WS_Server, {
     withCredentials: false,
-    transports: ["polling","websocket"]
+    transports: ["websocket", "polling"]
 });
-
 
 interface Props {
     children: React.ReactNode
 }
 
 export const SocketProvider: React.FC<Props> = ({ children }) => {
-    const navigate = useNavigate(); //will help to progeamtically handle navigation
+    const navigate = useNavigate();
 
-    //state variable to store the userId
-    const [user, setUser] = useState<Peer>(); //new peer user
+    const [user, setUser] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
+    const [peers, dispatch] = useReducer(peerReducer, {});
 
-    const [peers, dispatch] = useReducer(peerReducer, {}); //peer->state
-
-        const fetchParticipantList = ({roomId, participants}: {roomId: string, participants: string[]}) => {
-        console.log("Fetched room participants");
-        console.log(roomId, participants);
+    const fetchParticipantList = ({ roomId, participants }: { roomId: string, participants: string[] }) => {
+        console.log("Room participants:", roomId, participants);
     }
 
-    const fetchUserFeed = async() => {
-        const stream = await navigator.mediaDevices.getUserMedia({ video : true, audio: true});
-        setStream(stream);
-    }
-
-        useEffect(() => {
-
-            const userId = UUIDv4();
-            const newPeer = new Peer(userId, {
-                host: "video-chat-app-backend-zmxi.onrender.com",
-                port: 443,
-                path: "/peerjs/myapp",
-                secure: true  // Add this for localhost HTTP
+    const fetchUserFeed = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
             });
-        setUser(newPeer);
-
-        fetchUserFeed();
-
-        const enterRoom = ({ roomId }:{ roomId: string}) => {
-            navigate(`/room/${roomId}`)
+            setStream(stream);
+        } catch (error) {
+            console.error("Error getting media:", error);
         }
-
-        //we will transfer the user to the room page when we collect an event of room-created from server
-        socket.on("room-created", enterRoom);
-        socket.on("get-users", fetchParticipantList);
-    },[])
+    }
 
     useEffect(() => {
-        if(!user || !stream) return;
+        const userId = UUIDv4();
         
-        socket.on("user-joined", ({peerId}) => {
+        const newPeer = new Peer(userId, {
+            host: "video-chat-app-backend-zmxi.onrender.com",
+            port: 443,
+            path: "/peerjs/myapp",
+            secure: true,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    {
+                        urls: 'turn:openrelay.metered.ca:80',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject',
+                    }
+                ]
+            }
+        });
+
+        setUser(newPeer);
+        fetchUserFeed();
+
+        const enterRoom = ({ roomId }: { roomId: string }) => {
+            navigate(`/room/${roomId}`);
+        }
+
+        socket.on("room-created", enterRoom);
+        socket.on("get-users", fetchParticipantList);
+
+        return () => {
+            newPeer.destroy();
+            stream?.getTracks().forEach(track => track.stop());
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!user || !stream) return;
+
+        socket.on("user-joined", ({ peerId }: { peerId: string }) => {
             const call = user.call(peerId, stream);
-            console.log("calling a new peer", peerId);
-            call.on("stream", (stream) => {
-                dispatch(addPeerAction(peerId, stream));
-            })
-        })
+            call.on("stream", (remoteStream) => {
+                dispatch(addPeerAction(peerId, remoteStream));
+            });
+        });
 
         user.on("call", (call) => {
-            //what to do when other peers on the group call you when u joined
-            console.log("receiving a call");
             call.answer(stream);
-            call.on("stream", (stream) => {
-                dispatch(addPeerAction(call.peer, stream));
-            })
-        })
+            call.on("stream", (remoteStream) => {
+                dispatch(addPeerAction(call.peer, remoteStream));
+            });
+        });
+
         socket.emit("ready");
-    },[user, stream])
+    }, [user, stream])
+
     return (
-        <SocketContext.Provider value ={{ socket, user, stream, peers }}>
+        <SocketContext.Provider value={{ socket, user, stream, peers }}>
             {children}
         </SocketContext.Provider>
-    ) 
+    )
 }
