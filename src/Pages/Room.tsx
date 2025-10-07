@@ -25,20 +25,23 @@ const Room: React.FC =() =>{
 
     return(
         <div>
-            Creater feed
-            <br/>
-            room: {id}
-            <UserFeedPlayer stream ={stream} />
+            {/* Your own video */}
             <div>
-                Other users feed
+                <h3>Your Feed</h3>
+                <UserFeedPlayer stream={stream} />
+            </div>
+            
+            {/* Other users' videos */}
+            <div>
+                <h3>Other Participants ({Object.keys(peers).length})</h3>
                 {Object.keys(peers).map((peerId) => (
-                    <div key = {peerId}>
-                        <UserFeedPlayer stream = {peers[peerId].stream}/>
+                    <div key={peerId}>
+                        <p>Peer: {peerId.substring(0, 8)}</p>
+                        <UserFeedPlayer stream={peers[peerId].stream}/>
                     </div>
                 ))}
             </div>
         </div>
-        
     )
 }
 
